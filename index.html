@@ -4,15 +4,115 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SRIKANDI MONITORING UNIT</title>
-
+  
   <link rel="icon" type="image/png" href="https://i.postimg.cc/DzWsHG8J/pngwing-com.png">
   
   <style>
-    html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; }
-    iframe { width: 100%; height: 100%; border: none; }
+    /* Reset & Base Styling */
+    html, body { 
+      margin: 0; 
+      padding: 0; 
+      width: 100%; 
+      height: 100%; 
+      overflow: hidden; 
+      background-color: #1a1a1a; /* Background dark elegant biar adem di mata */
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+
+    /* Iframe Styling */
+    iframe { 
+      width: 100%; 
+      height: 100%; 
+      border: none; 
+      opacity: 0; /* Sembunyikan iframe dulu sampai selesai loading */
+      transition: opacity 0.5s ease;
+      position: absolute;
+      top: 0;
+      left: 0;
+      z-index: 1;
+    }
+
+    /* Loader Container */
+    #loader-container {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 10;
+      background-color: #1a1a1a;
+      transition: opacity 0.4s ease, visibility 0.4s;
+    }
+
+    /* Animasi Spinner Ring */
+    .spinner {
+      width: 50px;
+      height: 50px;
+      border: 4px solid rgba(255, 255, 255, 0.1);
+      border-radius: 50%;
+      border-top-color: #2ecc71; /* Aksen hijau muda biar matching sama status MASUK Srikandi */
+      animation: spin 1s ease-in-out infinite;
+    }
+
+    /* Teks Loading */
+    .loading-text {
+      color: #ffffff;
+      margin-top: 20px;
+      font-size: 1rem;
+      letter-spacing: 2px;
+      font-weight: bold;
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+
+    /* Detail Sub-text */
+    .loading-subtext {
+      color: #888888;
+      margin-top: 8px;
+      font-size: 0.8rem;
+    }
+
+    /* Keyframes Animasi */
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 0.5; }
+      50% { opacity: 1; }
+    }
   </style>
 </head>
 <body>
-  <iframe src="https://script.google.com/macros/s/AKfycbzztPnpAguJovJx-QjepVNjZqFRRqWD64EkYw5b4AoacACIqAZctA3nuOk0m-OvCsg60Q/exec"></iframe>
+
+  <div id="loader-container">
+    <div class="spinner"></div>
+    <div class="loading-text">MEMUAT SRIKANDI APP</div>
+    <div class="loading-subtext">Menghubungkan Ke Server...</div>
+  </div>
+
+  <iframe 
+    id="srikandi-frame"   src="https://script.google.com/macros/s/AKfycbzztPnpAguJovJx-QjepVNjZqFRRqWD64EkYw5b4AoacACIqAZctA3nuOk0m-OvCsg60Q/exec"
+    onload="hilangkanLoader()">
+  </iframe>
+
+  <script>
+    // Fungsi otomatis menghilangkan loader saat iframe selesai dimuat
+    function hilangkanLoader() {
+      const loader = document.getElementById('loader-container');
+      const frame = document.getElementById('srikandi-frame');
+      
+      // Kasih delay mini 200ms biar transisinya transparan halus beneran
+      setTimeout(() => {
+        loader.style.opacity = '0';
+        loader.style.visibility = 'hidden';
+        frame.style.opacity = '1';
+      }, 200);
+    }
+  </script>
+
 </body>
 </html>
