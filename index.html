@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
   <title>SRIKANDI MONITORING UNIT</title>
   
   <link rel="icon" type="image/png" href="https://i.postimg.cc/DzWsHG8J/pngwing-com.png">
@@ -15,7 +15,7 @@
       width: 100%; 
       height: 100%; 
       overflow: hidden; 
-      background-color: #1a1a1a; /* Background dark elegant biar adem di mata */
+      background-color: #0a0a0a;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     }
 
@@ -24,12 +24,16 @@
       width: 100%; 
       height: 100%; 
       border: none; 
-      opacity: 0; /* Sembunyikan iframe dulu sampai selesai loading */
-      transition: opacity 0.5s ease;
+      opacity: 0;
+      transition: opacity 0.5s ease-in-out;
       position: absolute;
       top: 0;
       left: 0;
       z-index: 1;
+    }
+
+    iframe.visible {
+      opacity: 1;
     }
 
     /* Loader Container */
@@ -44,74 +48,185 @@
       justify-content: center;
       align-items: center;
       z-index: 10;
-      background-color: #1a1a1a;
+      background: linear-gradient(135deg, #0a0a0a 0%, #1a472a 100%);
       transition: opacity 0.4s ease, visibility 0.4s;
+    }
+
+    #loader-container.hide {
+      opacity: 0;
+      visibility: hidden;
+    }
+
+    /* Logo */
+    .loader-logo {
+      width: 80px;
+      height: 80px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 20px;
+      animation: bounce 2s ease-in-out infinite;
+    }
+
+    .loader-logo img {
+      width: 60px;
+      height: 60px;
+      object-fit: contain;
     }
 
     /* Animasi Spinner Ring */
     .spinner {
       width: 50px;
       height: 50px;
-      border: 4px solid rgba(255, 255, 255, 0.1);
+      border: 4px solid rgba(46, 204, 113, 0.2);
       border-radius: 50%;
-      border-top-color: #2ecc71; /* Aksen hijau muda biar matching sama status MASUK Srikandi */
+      border-top-color: #2ecc71;
       animation: spin 1s ease-in-out infinite;
+      margin-top: 20px;
     }
 
     /* Teks Loading */
     .loading-text {
       color: #ffffff;
       margin-top: 20px;
-      font-size: 1rem;
-      letter-spacing: 2px;
+      font-size: 1.1rem;
+      letter-spacing: 3px;
       font-weight: bold;
-      animation: pulse 1.5s ease-in-out infinite;
     }
 
     /* Detail Sub-text */
     .loading-subtext {
-      color: #888888;
+      color: #2ecc71;
       margin-top: 8px;
       font-size: 0.8rem;
+      font-weight: 500;
     }
+
+    /* Loading progress dots */
+    .loading-dots {
+      margin-top: 15px;
+    }
+    .loading-dots span {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      background: #2ecc71;
+      border-radius: 50%;
+      margin: 0 3px;
+      animation: dotBounce 1.4s infinite ease-in-out;
+    }
+    .loading-dots span:nth-child(1) { animation-delay: 0s; }
+    .loading-dots span:nth-child(2) { animation-delay: 0.2s; }
+    .loading-dots span:nth-child(3) { animation-delay: 0.4s; }
 
     /* Keyframes Animasi */
     @keyframes spin {
       to { transform: rotate(360deg); }
     }
 
-    @keyframes pulse {
-      0%, 100% { opacity: 0.5; }
-      50% { opacity: 1; }
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+
+    @keyframes dotBounce {
+      0%, 80%, 100% { transform: scale(0.6); opacity: 0.3; }
+      40% { transform: scale(1.2); opacity: 1; }
     }
   </style>
 </head>
 <body>
 
   <div id="loader-container">
+    <div class="loader-logo">
+      <img src="https://i.postimg.cc/DzWsHG8J/pngwing-com.png" alt="Logo Srikandi" onerror="this.style.display='none'">
+    </div>
     <div class="spinner"></div>
-    <div class="loading-text">MEMUAT SRIKANDI APP</div>
-    <div class="loading-subtext">Menghubungkan Ke Server...</div>
+    <div class="loading-text">S R I K A N D I</div>
+    <div class="loading-subtext" id="loadingStatus">Menghubungi server...</div>
+    <div class="loading-dots">
+      <span></span><span></span><span></span>
+    </div>
   </div>
 
   <iframe 
-    id="srikandi-frame"   src="https://script.google.com/macros/s/AKfycbzztPnpAguJovJx-QjepVNjZqFRRqWD64EkYw5b4AoacACIqAZctA3nuOk0m-OvCsg60Q/exec"
-    onload="hilangkanLoader()">
+    id="srikandi-frame" 
+    src="https://script.google.com/macros/s/AKfycbzztPnpAguJovJx-QjepVNjZqFRRqWD64EkYw5b4AoacACIqAZctA3nuOk0m-OvCsg60Q/exec"
+    onload="handleIframeLoad()">
   </iframe>
 
   <script>
-    // Fungsi otomatis menghilangkan loader saat iframe selesai dimuat
-    function hilangkanLoader() {
-      const loader = document.getElementById('loader-container');
-      const frame = document.getElementById('srikandi-frame');
-      
-      // Kasih delay mini 200ms biar transisinya transparan halus beneran
-      setTimeout(() => {
-        loader.style.opacity = '0';
-        loader.style.visibility = 'hidden';
-        frame.style.opacity = '1';
-      }, 200);
+    let loaderHidden = false;
+    let loadStartTime = Date.now();
+    
+    // Variasi teks loading biar ga monoton
+    const loadingTexts = [
+      "Menghubungi server...",
+      "Memuat data terbaru...",
+      "Menyiapkan dashboard...",
+      "Hampir selesai..."
+    ];
+    let textIndex = 0;
+    
+    // Rotasi teks loading setiap 2 detik
+    const textInterval = setInterval(function() {
+      if (!loaderHidden) {
+        textIndex = (textIndex + 1) % loadingTexts.length;
+        var statusEl = document.getElementById('loadingStatus');
+        if (statusEl) statusEl.innerText = loadingTexts[textIndex];
+      }
+    }, 2000);
+    
+    function handleIframeLoad() {
+      // Tambah delay 1.5 detik setelah iframe load biar GAS internal siap
+      setTimeout(function() {
+        if (!loaderHidden) {
+          hideLoader();
+        }
+      }, 1500);
     }
+    
+    function hideLoader() {
+      if (loaderHidden) return;
+      loaderHidden = true;
+      clearInterval(textInterval);
+      
+      var loader = document.getElementById('loader-container');
+      var frame = document.getElementById('srikandi-frame');
+      
+      loader.classList.add('hide');
+      frame.classList.add('visible');
+      
+      // Hapus loader dari DOM setelah transisi selesai
+      setTimeout(function() {
+        var loaderEl = document.getElementById('loader-container');
+        if (loaderEl) loaderEl.remove();
+      }, 500);
+    }
+    
+    // FALLBACK: Maksimal 10 detik loader tetap tampil, paksa hilangin
+    setTimeout(function() {
+      if (!loaderHidden) {
+        console.log("Fallback timeout: memaksa loader hilang");
+        hideLoader();
+      }
+    }, 10000);
+    
+    // Optional: detect error jika iframe gagal load
+    var frame = document.getElementById('srikandi-frame');
+    frame.addEventListener('error', function() {
+      var statusEl = document.getElementById('loadingStatus');
+      if (statusEl) {
+        statusEl.innerText = "Gagal koneksi! Coba refresh...";
+        statusEl.style.color = "#ff6b6b";
+      }
+      // Tetap hilangkan loader setelah 3 detik meskipun error
+      setTimeout(function() {
+        hideLoader();
+      }, 3000);
+    });
   </script>
 
 </body>
