@@ -412,7 +412,7 @@
 // 📡 JALUR KABEL REST API (PENGGANTI UTAMA GOOGLE.SCRIPT.RUN)
 // ==========================================
 // PENTING: Ganti URL di bawah dengan tautan Web App Apps Script milik lu sendiri (/exec) !
-const GAS_EXEC_URL = "https://script.google.com/macros/s/AKfycbzKJUtlNUM5j70yZVjjJE3B2OUTOC-ZxJilZtEuuxmBHHFrId-Z9oWO5as2FIAY66246g/exec";
+const GAS_EXEC_URL = "https://script.google.com/macros/s/AKfycbzxWvhqVEz7ww_ckm7Rtq_AAoISPcT7IFGZJoAfoz1hbJH4AQjJ26fjWDfghOntWKaYtA/exec";
 
 // Inisialisasi Data Awal saat Aplikasi Pertama Kali Dibuka di Luar Iframe
 (function inisialisasiSrikandiAPI() {
@@ -482,6 +482,75 @@ const GAS_EXEC_URL = "https://script.google.com/macros/s/AKfycbzKJUtlNUM5j70yZVj
       });
     });
 })();
+
+// ====================================================================
+// SAKLAR OTOMATIS: MENGUBAH GOOGLE.SCRIPT.RUN MENJADI REST API (FETCH)
+// ====================================================================
+if (typeof google === 'undefined' || !google.script || !google.script.run) {
+  window.google = {
+    script: {
+      run: {
+        // Objek penampung fungsi sukses & gagal bawaan template asli
+        withSuccessHandler: function(successCallback) {
+          return {
+            withFailureHandler: function(failureCallback) {
+              return createProxyActions(successCallback, failureCallback);
+            },
+            // Fallback jika codingan lu gak pake Failure Handler
+            ...createProxyActions(successCallback, function(err) { console.error("API Error:", err); })
+          };
+        }
+      }
+    }
+  };
+}
+
+// Fungsi pembantu untuk menembak fungsi Apps Script lewat metode POST
+function createProxyActions(successCb, failureCb) {
+  const proxy = {};
+  
+  // Daftarkan nama fungsi-fungsi utama yang ada di Code.gs Srikandi lu
+  // Tambahkan nama fungsi lain di dalam array jika ada yang kurang, Bre!
+  const namaFungsiAppsScript = [
+    "simpanData", 
+    "prosesUnitMasuk", 
+    "prosesUnitKeluar", 
+    "updateStatusSecurity", 
+    "getConfig",
+    "getQuoteForHome"
+  ];
+  
+  namaFungsiAppsScript.forEach(function(namaFungsi) {
+    proxy[namaFungsi] = function(...args) {
+      // Tembak URL Web App (/exec) yang sudah lu pasang di baris 415
+      fetch(GAS_EXEC_URL, {
+        method: "POST",
+        mode: "cors",
+        headers: {
+          "Content-Type": "text/plain;charset=utf-8" // GAS membutuhkan text/plain agar tidak terkena preflight CORS
+        },
+        body: JSON.stringify({
+          action: namaFungsi,
+          arguments: args
+        })
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data && data.error) {
+          if (failureCb) failureCb(data.error);
+        } else {
+          if (successCb) successCb(data);
+        }
+      })
+      .catch(err => {
+        console.error(`Gagal eksekusi fungsi ${namaFungsi}:`, err);
+        if (failureCb) failureCb(err);
+      });
+    };
+  });
+  
+  return proxy;
+}
 
 // ==========================================
 // FUNCTIONS CADANGAN & PENDUKUNG (DIAMBIL DARI ASLI)
