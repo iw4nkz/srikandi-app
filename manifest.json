@@ -1,4 +1,5 @@
 {
+  "id": "com.srikandi.monitoring",
   "name": "SRIKANDI Monitoring Unit",
   "short_name": "SRIKANDI",
   "description": "Aplikasi monitoring unit kendaraan untuk security dealer",
@@ -10,13 +11,13 @@
   "scope": "/",
   "icons": [
     {
-      "src": "https://i.postimg.cc/DzWsHG8J/pngwing-com.png",
+      "src": "/icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "https://i.postimg.cc/DzWsHG8J/pngwing-com.png",
+      "src": "/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
