@@ -2,7 +2,7 @@
   "id": "com.srikandi.monitoring",
   "name": "SRIKANDI Monitoring Unit",
   "short_name": "SRIKANDI",
-  "description": "Aplikasi monitoring unit kendaraan untuk security dealer",
+  "description": "Aplikasi Monitoring Unit Kendaraan Untuk Security Dealer",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0a0a0a",
@@ -23,15 +23,15 @@
       "purpose": "any maskable"
     }
   ],
+  "screenshots": [
+    {
+      "src": "/screenshot-home.png",
+      "sizes": "1080x1920",
+      "type": "image/png",
+      "form_factor": "narrow"
+    }
+  ],
   "categories": ["business", "productivity"],
   "lang": "id",
   "dir": "ltr"
 }
-"screenshots": [
-  {
-    "src": "/screenshot-home.png",
-    "sizes": "1080x1920",
-    "type": "image/png",
-    "form_factor": "narrow"
-  }
-]
