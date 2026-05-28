@@ -2,8 +2,8 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-  <!-- PWA Manifest & Theme -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  
   <link rel="manifest" href="/manifest.json">
   <meta name="theme-color" content="#0a0a0a">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -13,18 +13,20 @@
   <link rel="icon" type="image/png" href="https://i.postimg.cc/DzWsHG8J/pngwing-com.png">
   
   <style>
-    /* Reset & Base Styling */
+    /* 2. KUNCI PERGERAKAN INDUK: Mematikan paksa pull-to-refresh dan rubber-banding */
     html, body { 
       margin: 0; 
       padding: 0; 
       width: 100%; 
       height: 100%; 
       overflow: hidden; 
+      position: fixed; 
+      overscroll-behavior-y: none; 
       background-color: #0a0a0a;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     }
 
-    /* Iframe Styling */
+    /* 3. IFRAME STYLING: Kontrol scroll halus tapi aman di dalam frame */
     iframe { 
       width: 100%; 
       height: 100%; 
@@ -35,34 +37,36 @@
       top: 0;
       left: 0;
       z-index: 1;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
     }
 
     iframe.visible {
       opacity: 1;
     }
 
-    /* Loader Container */
-#loader-container {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  z-index: 10;
-  background: linear-gradient(145deg, #1a1a1a 0%, #141414 30%, #0d1a0d 70%, #0a0f0a 100%);
-  transition: opacity 0.4s ease, visibility 0.4s;
-}
+    /* Loader Container Background Gradasi Srikandi */
+    #loader-container {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 10;
+      background: linear-gradient(145deg, #1a1a1a 0%, #141414 30%, #0d1a0d 70%, #0a0f0a 100%);
+      transition: opacity 0.4s ease, visibility 0.4s;
+    }
 
     #loader-container.hide {
       opacity: 0;
       visibility: hidden;
     }
 
-    /* Logo */
+    /* Animasi Mantul Logo */
     .loader-logo {
       width: 80px;
       height: 80px;
@@ -81,7 +85,7 @@
       object-fit: contain;
     }
 
-    /* Animasi Spinner Ring */
+    /* Animasi Ring Spinner */
     .spinner {
       width: 50px;
       height: 50px;
@@ -92,7 +96,7 @@
       margin-top: 20px;
     }
 
-    /* Teks Loading */
+    /* Teks Utama Srikandi */
     .loading-text {
       color: #ffffff;
       margin-top: 20px;
@@ -101,7 +105,7 @@
       font-weight: bold;
     }
 
-    /* Detail Sub-text */
+    /* Sub-text Variasi */
     .loading-subtext {
       color: #2ecc71;
       margin-top: 8px;
@@ -109,7 +113,7 @@
       font-weight: 500;
     }
 
-    /* Loading progress dots */
+    /* Titik-titik Animasi */
     .loading-dots {
       margin-top: 15px;
     }
@@ -126,7 +130,7 @@
     .loading-dots span:nth-child(2) { animation-delay: 0.2s; }
     .loading-dots span:nth-child(3) { animation-delay: 0.4s; }
 
-    /* Keyframes Animasi */
+    /* Daftar Kumpulan Animasi */
     @keyframes spin {
       to { transform: rotate(360deg); }
     }
@@ -166,7 +170,7 @@
     let loaderHidden = false;
     let loadStartTime = Date.now();
     
-    // Variasi teks loading biar ga monoton
+    // Antrian teks biar user ga bosen nunggu cold start GAS
     const loadingTexts = [
       "Menghubungi server...",
       "Memuat data terbaru...",
@@ -175,7 +179,7 @@
     ];
     let textIndex = 0;
     
-    // Rotasi teks loading setiap 2 detik
+    // Rotasi sub-teks setiap 2 detik sekali
     const textInterval = setInterval(function() {
       if (!loaderHidden) {
         textIndex = (textIndex + 1) % loadingTexts.length;
@@ -185,7 +189,7 @@
     }, 2000);
     
     function handleIframeLoad() {
-      // Tambah delay 1.5 detik setelah iframe load biar GAS internal siap
+      // Tambahkan delay 1.5 detik setelah iframe kelar load biar rendering engine internal GAS mapan dulu
       setTimeout(function() {
         if (!loaderHidden) {
           hideLoader();
@@ -204,22 +208,22 @@
       loader.classList.add('hide');
       frame.classList.add('visible');
       
-      // Hapus loader dari DOM setelah transisi selesai
+      // Hapus total element loader dari DOM demi menghemat konsumsi RAM HP security lapangan
       setTimeout(function() {
         var loaderEl = document.getElementById('loader-container');
         if (loaderEl) loaderEl.remove();
       }, 500);
     }
     
-    // FALLBACK: Maksimal 10 detik loader tetap tampil, paksa hilangin
+    // JALUR AMAN TIMEOUT: Maksimal 10 detik nunggu, loader terpaksa dihilangkan biar ga stuck blank
     setTimeout(function() {
       if (!loaderHidden) {
-        console.log("Fallback timeout: memaksa loader hilang");
+        console.log("Fallback timeout dijalankan.");
         hideLoader();
       }
     }, 10000);
     
-    // Optional: detect error jika iframe gagal load
+    // Tangkap error jika sinyal jelek/koneksi putus di tengah jalan
     var frame = document.getElementById('srikandi-frame');
     frame.addEventListener('error', function() {
       var statusEl = document.getElementById('loadingStatus');
@@ -227,13 +231,12 @@
         statusEl.innerText = "Gagal koneksi! Coba refresh...";
         statusEl.style.color = "#ff6b6b";
       }
-      // Tetap hilangkan loader setelah 3 detik meskipun error
       setTimeout(function() {
         hideLoader();
       }, 3000);
     });
   </script>
-  <!-- PWA Service Worker Registration -->
+
   <script>
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('/sw.js')
@@ -241,6 +244,5 @@
         .catch(err => console.log('SW failed:', err));
     }
   </script>
-</body>
 </body>
 </html>
