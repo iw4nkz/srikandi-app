@@ -2,8 +2,10 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8">
+  <!-- KUNCI VIEWPORT: Mencegah zoom otomatis dan pergeseran layar saat input di HP -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   
+  <!-- PWA Manifest & Theme -->
   <link rel="manifest" href="/manifest.json">
   <meta name="theme-color" content="#0a0a0a">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -14,7 +16,7 @@
   <link rel="icon" type="image/png" href="https://i.postimg.cc/DzWsHG8J/pngwing-com.png">
   
   <style>
-    /* RESET BASE */
+    /* RESET BASE: Mematikan paksa fitur pull-to-refresh browser */
     html, body { 
       margin: 0; 
       padding: 0; 
@@ -24,9 +26,10 @@
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       overflow: hidden;
       overscroll-behavior-y: none;
+      position: fixed;
     }
 
-    /* IFRAME WRAPPER (Ini Kunci Biar PC Tampak Minimalis, tapi HP Tetap Full & Kokoh) */
+    /* WRAPPER: Di HP jadi Full, di PC jadi kotak minimalis di tengah */
     .app-wrapper {
       width: 100%;
       height: 100%;
@@ -37,18 +40,19 @@
       box-shadow: 0 0 20px rgba(0,0,0,0.8);
     }
 
-    /* KONDISI DI PC / TABLET (Lebar layar di atas 768px akan otomatis mengotak di tengah) */
+    /* KONDISI PC / TABLET */
     @media (min-width: 768px) {
       body {
         background: radial-gradient(circle, #1a1a1a 0%, #0a0a0a 100%);
         display: flex;
         justify-content: center;
         align-items: center;
+        position: static; /* Lepas fixed agar bisa center di PC */
       }
       .app-wrapper {
         width: 100%;
-        max-width: 480px; /* Ukuran pas ala simulasi mobile/tablet */
-        height: 92vh;     /* Memberi jarak manis dari atas-bawah monitor PC */
+        max-width: 480px; 
+        height: 92vh;     
         border-radius: 16px;
         border: 4px solid #222;
       }
@@ -91,7 +95,7 @@
       visibility: hidden;
     }
 
-    /* ANIMASI LOGO */
+    /* ANIMASI LOGO MANTUL */
     .loader-logo {
       width: 80px;
       height: 80px;
@@ -110,7 +114,7 @@
       object-fit: contain;
     }
 
-    /* SPINNER */
+    /* SPINNER RING */
     .spinner {
       width: 50px;
       height: 50px;
@@ -121,7 +125,7 @@
       margin-top: 20px;
     }
 
-    /* TEXT LOADING */
+    /* TYPOGRAPHY */
     .loading-text {
       color: #ffffff;
       margin-top: 20px;
@@ -137,9 +141,6 @@
       font-weight: 500;
     }
 
-    .loading-dots {
-      margin-top: 15px;
-    }
     .loading-dots span {
       display: inline-block;
       width: 8px;
@@ -149,7 +150,6 @@
       margin: 0 3px;
       animation: dotBounce 1.4s infinite ease-in-out;
     }
-    .loading-dots span:nth-child(1) { animation-delay: 0s; }
     .loading-dots span:nth-child(2) { animation-delay: 0.2s; }
     .loading-dots span:nth-child(3) { animation-delay: 0.4s; }
 
@@ -161,7 +161,7 @@
 <body>
 
   <div class="app-wrapper">
-
+    <!-- LAYER LOADER -->
     <div id="loader-container">
       <div class="loader-logo">
         <img src="https://i.postimg.cc/DzWsHG8J/pngwing-com.png" alt="Logo Srikandi" onerror="this.style.display='none'">
@@ -174,25 +174,20 @@
       </div>
     </div>
 
+    <!-- IFRAME UTAMA SRIKANDI (LINK GAS LU) -->
     <iframe 
       id="srikandi-frame" 
       src="https://script.google.com/macros/s/AKfycbxt9O2Xy9DDyLDFHEswyRgvR75fG_zlEfmB_Qvj-1GHXsRIrQXmQgtQg2BLKouszg9HCQ/exec"
       onload="handleIframeLoad()">
     </iframe>
-
   </div>
 
   <script>
     let loaderHidden = false;
-    
-    const loadingTexts = [
-      "Menghubungi server...",
-      "Memuat data terbaru...",
-      "Menyiapkan dashboard...",
-      "Hampir selesai..."
-    ];
+    const loadingTexts = ["Menghubungi server...", "Memuat data terbaru...", "Menyiapkan dashboard...", "Hampir selesai..."];
     let textIndex = 0;
     
+    // Rotasi teks loading
     const textInterval = setInterval(function() {
       if (!loaderHidden) {
         textIndex = (textIndex + 1) % loadingTexts.length;
@@ -203,9 +198,7 @@
     
     function handleIframeLoad() {
       setTimeout(function() {
-        if (!loaderHidden) {
-          hideLoader();
-        }
+        if (!loaderHidden) hideLoader();
       }, 1500);
     }
     
@@ -221,38 +214,22 @@
       frame.classList.add('visible');
       
       setTimeout(function() {
-        var loaderEl = document.getElementById('loader-container');
-        if (loaderEl) loaderEl.remove();
-        
-        // JALUR SAKTI: Paksa paksa viewport kembali ke koordinat paling atas (0,0) setelah load sukses
+        if (loader) loader.remove();
+        // Reset posisi layar ke (0,0) untuk jaga-jaga
         window.scrollTo(0, 0);
-        document.body.scrollTop = 0;
       }, 500);
     }
     
-    // TIMEOUT FALLBACK 10 DETIK
+    // Fallback 10 detik jika koneksi lambat
     setTimeout(function() {
-      if (!loaderHidden) {
-        hideLoader();
-      }
+      if (!loaderHidden) hideLoader();
     }, 10000);
-    
-    var frame = document.getElementById('srikandi-frame');
-    frame.addEventListener('error', function() {
-      var statusEl = document.getElementById('loadingStatus');
-      if (statusEl) {
-        statusEl.innerText = "Gagal koneksi! Coba refresh...";
-        statusEl.style.color = "#ff6b6b";
-      }
-      setTimeout(function() { hideLoader(); }, 3000);
-    });
   </script>
 
+  <!-- PWA SERVICE WORKER -->
   <script>
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/sw.js')
-        .then(reg => console.log('SW registered:', reg.scope))
-        .catch(err => console.log('SW failed:', err));
+      navigator.serviceWorker.register('/sw.js').catch(err => console.log('SW failed:', err));
     }
   </script>
 </body>
