@@ -2,61 +2,43 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8">
-  <!-- KUNCI VIEWPORT: Tetap penting agar di HP tidak goyang saat input -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  
   <link rel="manifest" href="/manifest.json">
   <meta name="theme-color" content="#0a0a0a">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="apple-touch-icon" href="https://i.postimg.cc/DzWsHG8J/pngwing-com.png">
   <title>SRIKANDI MONITORING UNIT</title>
-  
   <link rel="icon" type="image/png" href="https://i.postimg.cc/DzWsHG8J/pngwing-com.png">
-  
   <style>
-    /* RESET BASE */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
     html, body { 
-      margin: 0; 
-      padding: 0; 
       width: 100%; 
       height: 100%; 
-      background-color: #0a0a0a;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      overflow: hidden; /* Mengunci scroll induk */
-      overscroll-behavior-y: none; /* Anti pull-to-refresh di HP */
+      background: #0a0a0a;
+      overflow: hidden;
+      overscroll-behavior-y: none;
     }
-
-    /* APP CONTAINER: Sekarang dibuat FULL 100% tanpa batasan lebar agar di PC bisa lebar */
     .app-wrapper {
       width: 100%;
       height: 100%;
       position: relative;
-      overflow: hidden;
     }
-
-    /* IFRAME: Mengikuti lebar container (Full di PC maupun HP) */
     iframe { 
       width: 100%; 
       height: 100%; 
       border: none; 
       opacity: 0;
-      transition: opacity 0.5s ease-in-out;
+      transition: opacity 0.5s ease;
       display: block;
-      overflow-y: auto;
       -webkit-overflow-scrolling: touch;
+      overflow-y: auto;
     }
-
-    iframe.visible {
-      opacity: 1;
-    }
-
-    /* LOADER STYLING */
+    iframe.visible { opacity: 1; }
+    
     #loader-container {
       position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
+      inset: 0;
       display: flex;
       flex-direction: column;
       justify-content: center;
@@ -65,12 +47,10 @@
       background: linear-gradient(145deg, #1a1a1a 0%, #141414 30%, #0d1a0d 70%, #0a0f0a 100%);
       transition: opacity 0.4s ease, visibility 0.4s;
     }
-
     #loader-container.hide {
       opacity: 0;
       visibility: hidden;
     }
-
     .loader-logo {
       width: 80px;
       height: 80px;
@@ -82,13 +62,11 @@
       margin-bottom: 20px;
       animation: bounce 2s ease-in-out infinite;
     }
-
     .loader-logo img {
       width: 60px;
       height: 60px;
       object-fit: contain;
     }
-
     .spinner {
       width: 50px;
       height: 50px;
@@ -98,21 +76,18 @@
       animation: spin 1s ease-in-out infinite;
       margin-top: 20px;
     }
-
     .loading-text {
-      color: #ffffff;
+      color: #fff;
       margin-top: 20px;
       font-size: 1.1rem;
       letter-spacing: 3px;
       font-weight: bold;
     }
-
     .loading-subtext {
       color: #2ecc71;
       margin-top: 8px;
       font-size: 0.8rem;
     }
-
     .loading-dots span {
       display: inline-block;
       width: 8px;
@@ -124,67 +99,91 @@
     }
     .loading-dots span:nth-child(2) { animation-delay: 0.2s; }
     .loading-dots span:nth-child(3) { animation-delay: 0.4s; }
-
+    
     @keyframes spin { to { transform: rotate(360deg); } }
     @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
     @keyframes dotBounce { 0%, 80%, 100% { transform: scale(0.6); opacity: 0.3; } 40% { transform: scale(1.2); opacity: 1; } }
   </style>
 </head>
 <body>
-
-  <div class="app-wrapper">
-    <!-- LAYER LOADER -->
-    <div id="loader-container">
-      <div class="loader-logo">
-        <img src="https://i.postimg.cc/DzWsHG8J/pngwing-com.png" alt="Srikandi">
-      </div>
-      <div class="spinner"></div>
-      <div class="loading-text">S R I K A N D I</div>
-      <div class="loading-subtext" id="loadingStatus">Menghubungi server...</div>
-      <div class="loading-dots">
-        <span></span><span></span><span></span>
-      </div>
+<div class="app-wrapper">
+  <div id="loader-container">
+    <div class="loader-logo">
+      <img src="https://i.postimg.cc/DzWsHG8J/pngwing-com.png" alt="Srikandi">
     </div>
-
-    <!-- IFRAME (Gunakan link GAS lu yang asli) -->
-    <iframe 
-      id="srikandi-frame" 
-      src="https://script.google.com/macros/s/AKfycbxt9O2Xy9DDyLDFHEswyRgvR75fG_zlEfmB_Qvj-1GHXsRIrQXmQgtQg2BLKouszg9HCQ/exec"
-      onload="handleIframeLoad()">
-    </iframe>
+    <div class="spinner"></div>
+    <div class="loading-text">S R I K A N D I</div>
+    <div class="loading-subtext" id="loadingStatus">Menghubungi server...</div>
+    <div class="loading-dots"><span></span><span></span><span></span></div>
   </div>
 
-  <script>
-    let loaderHidden = false;
-    const loadingTexts = ["Menghubungi server...", "Memuat data terbaru...", "Menyiapkan dashboard...", "Hampir selesai...", "Memuat Update Data..."];
-    let textIndex = 0;
-    
-    const textInterval = setInterval(function() {
-      if (!loaderHidden) {
-        textIndex = (textIndex + 1) % loadingTexts.length;
-        document.getElementById('loadingStatus').innerText = loadingTexts[textIndex];
-      }
-    }, 2000);
-    
-    function handleIframeLoad() {
-      setTimeout(function() {
-        if (!loaderHidden) hideLoader();
-      }, 1500);
+  <iframe 
+    id="srikandi-frame" 
+    src="https://script.google.com/macros/s/AKfycbxt9O2Xy9DDyLDFHEswyRgvR75fG_zlEfmB_Qvj-1GHXsRIrQXmQgtQg2BLKouszg9HCQ/exec"
+    onload="handleIframeLoad()"
+    onerror="handleIframeError()">
+  </iframe>
+</div>
+
+<script>
+  let loaderHidden = false;
+  const loadingTexts = ["Menghubungi server...", "Memuat data terbaru...", "Menyiapkan dashboard...", "Hampir selesai...", "Memuat Update Data..."];
+  let textIndex = 0;
+  
+  // Rotasi teks loading
+  const textInterval = setInterval(() => {
+    if (!loaderHidden) {
+      textIndex = (textIndex + 1) % loadingTexts.length;
+      const statusEl = document.getElementById('loadingStatus');
+      if (statusEl) statusEl.innerText = loadingTexts[textIndex];
     }
-    
-    function hideLoader() {
-      if (loaderHidden) return;
-      loaderHidden = true;
-      clearInterval(textInterval);
-      document.getElementById('loader-container').classList.add('hide');
-      document.getElementById('srikandi-frame').classList.add('visible');
-      setTimeout(function() {
-        if (document.getElementById('loader-container')) document.getElementById('loader-container').remove();
-        window.scrollTo(0, 0);
-      }, 500);
+  }, 2000);
+  
+  // Deteksi offline awal
+  if (!navigator.onLine) {
+    const statusEl = document.getElementById('loadingStatus');
+    if (statusEl) {
+      statusEl.innerText = "📡 Offline - Menunggu koneksi...";
+      statusEl.style.color = "#ffaa44";
     }
-    
-    setTimeout(function() { if (!loaderHidden) hideLoader(); }, 10000);
-  </script>
+    window.addEventListener('online', () => location.reload());
+  }
+  
+  function handleIframeLoad() {
+    setTimeout(() => {
+      if (!loaderHidden) hideLoader();
+    }, 1500);
+  }
+  
+  function handleIframeError() {
+    if (loaderHidden) return;
+    clearInterval(textInterval);
+    const statusEl = document.getElementById('loadingStatus');
+    if (statusEl) {
+      statusEl.innerText = "❌ Gagal terhubung! Refresh otomatis...";
+      statusEl.style.color = "#ff6b6b";
+    }
+    setTimeout(() => location.reload(), 3000);
+  }
+  
+  function hideLoader() {
+    if (loaderHidden) return;
+    loaderHidden = true;
+    clearInterval(textInterval);
+    const loader = document.getElementById('loader-container');
+    const frame = document.getElementById('srikandi-frame');
+    if (loader) loader.classList.add('hide');
+    if (frame) frame.classList.add('visible');
+    setTimeout(() => {
+      if (loader) loader.remove();
+      window.scrollTo(0, 0);
+    }, 500);
+  }
+  
+  // Fallback safety (10 detik maksimal loading)
+  setTimeout(() => {
+    if (!loaderHidden) hideLoader();
+  }, 10000);
+</script>
 </body>
 </html>
