@@ -35,3 +35,7 @@
   "lang": "id",
   "dir": "ltr"
 }
+{
+  "start_url": "/?source=pwa",
+  "scope": "/"
+}
