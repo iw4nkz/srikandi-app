@@ -3,7 +3,7 @@
   "name": "SRIKANDI Monitoring Unit",
   "short_name": "SRIKANDI",
   "description": "Aplikasi Monitoring Unit Kendaraan Untuk Security Dealer",
-  "start_url": "/",
+  "start_url": "/?source=pwa",
   "display": "standalone",
   "background_color": "#0a0a0a",
   "theme_color": "#0a0a0a",
@@ -34,8 +34,4 @@
   "categories": ["business", "productivity"],
   "lang": "id",
   "dir": "ltr"
-}
-{
-  "start_url": "/?source=pwa",
-  "scope": "/"
 }
