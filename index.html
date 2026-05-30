@@ -3,22 +3,25 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <!-- 👇 Meningkatkan kecepatan Loading 👇 -->
-  <link rel="dns-prefetch" href="https://script.google.com">
-  <link rel="preconnect" href="https://lh3.googleusercontent.com">
-  <link rel="preconnect" href="https://fonts.googleapis.com">  <!-- kalau pake Google Fonts -->
-  <!-- Preconnect ke imgBB biar koneksi lebih cepet -->
-  <link rel="preconnect" href="https://i.ibb.co">
-  <link rel="preconnect" href="https://image.ibb.co">
   
+  <!-- 👇 OPTIMASI KECEPATAN LOADING 👇 -->
+  <link rel="dns-prefetch" href="https://script.google.com">
+  <link rel="preconnect" href="https://script.google.com">
+  <link rel="preconnect" href="https://lh3.googleusercontent.com">
+  <link rel="preconnect" href="https://i.ibb.co.com">
+  
+  <!-- 👇 PWA + ICON 👇 -->
   <link rel="manifest" href="/manifest.json">
   <meta name="theme-color" content="#0a0a0a">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <link rel="apple-touch-icon" href="https://i.postimg.cc/DzWsHG8J/pngwing-com.png">
+  <link rel="apple-touch-icon" href="https://i.ibb.co.com/R4DSBf3N/pngwing-com.png">
+  
   <title>SRIKANDI MONITORING UNIT</title>
-  <!-- Preload gambar logo -->
-  <link rel="preload" as="image" href="https://i.ibb.co.com/9kjkWdWp/icon-192.png">
+  
+  <!-- Preload gambar logo biar cepet muncul -->
+  <link rel="preload" as="image" href="https://i.ibb.co.com/9kjkWdWp/icon-192.png" fetchpriority="high">
+  
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     html, body { 
@@ -96,6 +99,7 @@
       color: #2ecc71;
       margin-top: 8px;
       font-size: 0.8rem;
+      transition: color 0.3s ease;
     }
     .loading-dots span {
       display: inline-block;
@@ -106,6 +110,7 @@
       margin: 0 3px;
       animation: dotBounce 1.4s infinite ease-in-out;
     }
+    .loading-dots span:nth-child(1) { animation-delay: 0s; }
     .loading-dots span:nth-child(2) { animation-delay: 0.2s; }
     .loading-dots span:nth-child(3) { animation-delay: 0.4s; }
     
@@ -118,7 +123,7 @@
 <div class="app-wrapper">
   <div id="loader-container">
     <div class="loader-logo">
-      <img src="https://i.postimg.cc/DzWsHG8J/pngwing-com.png" alt="SDIM">
+      <img src="https://i.ibb.co.com/R4DSBf3N/pngwing-com.png" alt="SRIKANDI" fetchpriority="high">
     </div>
     <div class="spinner"></div>
     <div class="loading-text">S R I K A N D I</div>
@@ -130,69 +135,99 @@
     id="srikandi-frame" 
     src="https://script.google.com/macros/s/AKfycbxt9O2Xy9DDyLDFHEswyRgvR75fG_zlEfmB_Qvj-1GHXsRIrQXmQgtQg2BLKouszg9HCQ/exec"
     onload="handleIframeLoad()"
-    onerror="handleIframeError()">
+    onerror="handleIframeError()"
+    allow="geolocation; microphone; camera; midi; encrypted-media"
+    referrerpolicy="no-referrer-when-downgrade">
   </iframe>
 </div>
 
 <script>
-  let loaderHidden = false;
-  const loadingTexts = ["Menghubungi server...", "Memuat data terbaru...", "Menyiapkan dashboard...", "Hampir selesai...", "Memuat Update Data..."];
-  let textIndex = 0;
-  
-  // Rotasi teks loading
-  const textInterval = setInterval(() => {
-    if (!loaderHidden) {
-      textIndex = (textIndex + 1) % loadingTexts.length;
+  (function() {
+    let loaderHidden = false;
+    const loadingTexts = [
+      "Menghubungi server...", 
+      "Memuat data terbaru...", 
+      "Menyiapkan dashboard...", 
+      "Hampir selesai...", 
+      "Memuat Update Data..."
+    ];
+    let textIndex = 0;
+    
+    // Rotasi teks loading
+    const textInterval = setInterval(() => {
+      if (!loaderHidden) {
+        textIndex = (textIndex + 1) % loadingTexts.length;
+        const statusEl = document.getElementById('loadingStatus');
+        if (statusEl) statusEl.innerText = loadingTexts[textIndex];
+      }
+    }, 2000);
+    
+    // Deteksi offline awal
+    function updateOfflineStatus() {
       const statusEl = document.getElementById('loadingStatus');
-      if (statusEl) statusEl.innerText = loadingTexts[textIndex];
+      if (!statusEl) return;
+      
+      if (!navigator.onLine) {
+        statusEl.innerText = "📡 Offline - Menunggu koneksi...";
+        statusEl.style.color = "#ffaa44";
+      } else {
+        statusEl.innerText = loadingTexts[textIndex];
+        statusEl.style.color = "#2ecc71";
+      }
     }
-  }, 2000);
-  
-  // Deteksi offline awal
-  if (!navigator.onLine) {
-    const statusEl = document.getElementById('loadingStatus');
-    if (statusEl) {
-      statusEl.innerText = "📡 Offline - Menunggu koneksi...";
-      statusEl.style.color = "#ffaa44";
+    
+    window.addEventListener('online', () => {
+      updateOfflineStatus();
+      setTimeout(() => location.reload(), 500);
+    });
+    
+    window.addEventListener('offline', updateOfflineStatus);
+    updateOfflineStatus();
+    
+    function handleIframeLoad() {
+      // Delay sedikit biar transisi halus
+      setTimeout(() => {
+        if (!loaderHidden) hideLoader();
+      }, 1200);
     }
-    window.addEventListener('online', () => location.reload());
-  }
-  
-  function handleIframeLoad() {
+    
+    function handleIframeError() {
+      if (loaderHidden) return;
+      clearInterval(textInterval);
+      const statusEl = document.getElementById('loadingStatus');
+      if (statusEl) {
+        statusEl.innerText = "⚠️ Gagal terhubung! Mencoba lagi...";
+        statusEl.style.color = "#ff6b6b";
+      }
+      // Coba lagi setelah 3 detik
+      setTimeout(() => {
+        if (!loaderHidden) location.reload();
+      }, 3000);
+    }
+    
+    function hideLoader() {
+      if (loaderHidden) return;
+      loaderHidden = true;
+      clearInterval(textInterval);
+      
+      const loader = document.getElementById('loader-container');
+      const frame = document.getElementById('srikandi-frame');
+      
+      if (loader) loader.classList.add('hide');
+      if (frame) frame.classList.add('visible');
+      
+      // Hapus loader dari DOM setelah transisi
+      setTimeout(() => {
+        if (loader && loader.parentNode) loader.remove();
+        window.scrollTo(0, 0);
+      }, 500);
+    }
+    
+    // Fallback safety (10 detik maksimal loading)
     setTimeout(() => {
       if (!loaderHidden) hideLoader();
-    }, 1500);
-  }
-  
-  function handleIframeError() {
-    if (loaderHidden) return;
-    clearInterval(textInterval);
-    const statusEl = document.getElementById('loadingStatus');
-    if (statusEl) {
-      statusEl.innerText = "❌ Gagal terhubung! Refresh otomatis...";
-      statusEl.style.color = "#ff6b6b";
-    }
-    setTimeout(() => location.reload(), 3000);
-  }
-  
-  function hideLoader() {
-    if (loaderHidden) return;
-    loaderHidden = true;
-    clearInterval(textInterval);
-    const loader = document.getElementById('loader-container');
-    const frame = document.getElementById('srikandi-frame');
-    if (loader) loader.classList.add('hide');
-    if (frame) frame.classList.add('visible');
-    setTimeout(() => {
-      if (loader) loader.remove();
-      window.scrollTo(0, 0);
-    }, 500);
-  }
-  
-  // Fallback safety (10 detik maksimal loading)
-  setTimeout(() => {
-    if (!loaderHidden) hideLoader();
-  }, 10000);
+    }, 10000);
+  })();
 </script>
 </body>
 </html>
