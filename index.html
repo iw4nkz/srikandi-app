@@ -4,13 +4,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   
-  <!-- 👇 OPTIMASI KECEPATAN LOADING 👇 -->
   <link rel="dns-prefetch" href="https://script.google.com">
   <link rel="preconnect" href="https://script.google.com">
   <link rel="preconnect" href="https://lh3.googleusercontent.com">
   <link rel="preconnect" href="https://i.ibb.co.com">
   
-  <!-- 👇 PWA + ICON 👇 -->
   <link rel="manifest" href="/manifest.json">
   <meta name="theme-color" content="#0a0a0a">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -19,7 +17,6 @@
   
   <title>SRIKANDI MONITORING UNIT</title>
   
-  <!-- Preload gambar logo biar cepet muncul -->
   <link rel="preload" as="image" href="https://i.ibb.co.com/9kjkWdWp/icon-192.png" fetchpriority="high">
   
   <style>
@@ -144,6 +141,7 @@
 <script>
   (function() {
     let loaderHidden = false;
+    let iframeLoadTimeout;
     const loadingTexts = [
       "Menghubungi server...", 
       "Memuat data terbaru...", 
@@ -184,8 +182,16 @@
     window.addEventListener('offline', updateOfflineStatus);
     updateOfflineStatus();
     
+    // Reload otomatis kalau iframe gagal load dalam 12 detik
+    iframeLoadTimeout = setTimeout(() => {
+      if (!loaderHidden) {
+        console.log('⏳ Iframe terlalu lama, reload halaman...');
+        location.reload();
+      }
+    }, 12000);
+    
     function handleIframeLoad() {
-      // Delay sedikit biar transisi halus
+      clearTimeout(iframeLoadTimeout);
       setTimeout(() => {
         if (!loaderHidden) hideLoader();
       }, 1200);
@@ -194,12 +200,12 @@
     function handleIframeError() {
       if (loaderHidden) return;
       clearInterval(textInterval);
+      clearTimeout(iframeLoadTimeout);
       const statusEl = document.getElementById('loadingStatus');
       if (statusEl) {
         statusEl.innerText = "⚠️ Gagal terhubung! Mencoba lagi...";
         statusEl.style.color = "#ff6b6b";
       }
-      // Coba lagi setelah 3 detik
       setTimeout(() => {
         if (!loaderHidden) location.reload();
       }, 3000);
@@ -209,6 +215,7 @@
       if (loaderHidden) return;
       loaderHidden = true;
       clearInterval(textInterval);
+      clearTimeout(iframeLoadTimeout);
       
       const loader = document.getElementById('loader-container');
       const frame = document.getElementById('srikandi-frame');
@@ -216,7 +223,6 @@
       if (loader) loader.classList.add('hide');
       if (frame) frame.classList.add('visible');
       
-      // Hapus loader dari DOM setelah transisi
       setTimeout(() => {
         if (loader && loader.parentNode) loader.remove();
         window.scrollTo(0, 0);
