@@ -1,12 +1,12 @@
 {
   "id": "com.srikandi.monitoring",
   "name": "SRIKANDI",
-  "short_name": "SDIM",
+  "short_name": "SRIKANDI",
   "description": "Aplikasi Monitoring Unit Kendaraan Untuk Security Dealer",
   "start_url": "/?source=pwa",
   "display": "standalone",
-  "background_color": "#0a0a0a",
-  "theme_color": "#0a0a0a",
+  "background_color": "#1a2a1a",
+  "theme_color": "#1a2a1a",
   "orientation": "portrait",
   "scope": "/",
   "icons": [
@@ -14,13 +14,13 @@
       "src": "/icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any"
+      "purpose": "any maskable"
     },
     {
       "src": "/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any"
+      "purpose": "any maskable"
     },
     {
       "src": "/icon-192-maskable.png",
