@@ -11,14 +11,14 @@
   
   <link rel="manifest" href="/manifest.json">
   <meta name="theme-color" content="#0a0a0a">
+  <!-- ✅ Apple PWA — pakai file lokal -->
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <link rel="apple-touch-icon" href="https://i.ibb.co.com/R4DSBf3N/pngwing-com.png">
-  
+  <meta name="apple-mobile-web-app-title" content="SRIKANDI">
+  <link rel="apple-touch-icon" href="/icon-192.png">
+
   <title>SRIKANDI MONITORING UNIT</title>
-  
-  <link rel="preload" as="image" href="https://i.ibb.co.com/9kjkWdWp/icon-192.png" fetchpriority="high">
-  
+
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     html, body { 
@@ -63,7 +63,7 @@
     .loader-logo {
       width: 80px;
       height: 80px;
-      background: rgba(255,255,255,0.1);
+      background: rgba(255,255,255,0.08);
       border-radius: 20px;
       display: flex;
       align-items: center;
@@ -120,7 +120,9 @@
 <div class="app-wrapper">
   <div id="loader-container">
     <div class="loader-logo">
-      <img src="https://i.ibb.co.com/R4DSBf3N/pngwing-com.png" alt="SRIKANDI" fetchpriority="high">
+      <!-- ✅ Pakai file lokal, fallback ke teks kalau gagal -->
+      <img src="/icon-192.png" alt="SRIKANDI"
+           onerror="this.style.display='none';this.parentElement.innerHTML='<span style=\'color:#2ecc71;font-size:2rem;font-weight:bold;\'>S</span>'">
     </div>
     <div class="spinner"></div>
     <div class="loading-text">S R I K A N D I</div>
@@ -141,7 +143,11 @@
 <script>
   (function() {
     let loaderHidden = false;
-    let iframeLoadTimeout;
+    let textInterval;
+    // ✅ Timeout diselaraskan: fallback (12s) > auto-reload (10s)
+    const IFRAME_TIMEOUT_MS  = 10000; // reload kalau iframe stuck
+    const FALLBACK_HIDE_MS   = 12000; // paksa hide loader (safety net)
+
     const loadingTexts = [
       "Menghubungi server...", 
       "Memuat data terbaru...", 
@@ -151,20 +157,18 @@
     ];
     let textIndex = 0;
     
-    // Rotasi teks loading
-    const textInterval = setInterval(() => {
+    textInterval = setInterval(() => {
       if (!loaderHidden) {
         textIndex = (textIndex + 1) % loadingTexts.length;
         const statusEl = document.getElementById('loadingStatus');
         if (statusEl) statusEl.innerText = loadingTexts[textIndex];
       }
     }, 2000);
-    
+
     // Deteksi offline awal
     function updateOfflineStatus() {
       const statusEl = document.getElementById('loadingStatus');
       if (!statusEl) return;
-      
       if (!navigator.onLine) {
         statusEl.innerText = "📡 Offline - Menunggu koneksi...";
         statusEl.style.color = "#ffaa44";
@@ -178,29 +182,35 @@
       updateOfflineStatus();
       setTimeout(() => location.reload(), 500);
     });
-    
     window.addEventListener('offline', updateOfflineStatus);
     updateOfflineStatus();
-    
-    // Reload otomatis kalau iframe gagal load dalam 12 detik
-    iframeLoadTimeout = setTimeout(() => {
+
+    // ✅ Auto-reload kalau iframe stuck (10 detik)
+    const iframeLoadTimeout = setTimeout(() => {
       if (!loaderHidden) {
         console.log('⏳ Iframe terlalu lama, reload halaman...');
         location.reload();
       }
-    }, 12000);
+    }, IFRAME_TIMEOUT_MS);
+
+    // ✅ Safety net — paksa hide loader setelah 12 detik
+    const fallbackTimeout = setTimeout(() => {
+      if (!loaderHidden) hideLoader();
+    }, FALLBACK_HIDE_MS);
     
-    function handleIframeLoad() {
+    window.handleIframeLoad = function() {
       clearTimeout(iframeLoadTimeout);
+      clearTimeout(fallbackTimeout);
       setTimeout(() => {
         if (!loaderHidden) hideLoader();
       }, 1200);
-    }
+    };
     
-    function handleIframeError() {
+    window.handleIframeError = function() {
       if (loaderHidden) return;
       clearInterval(textInterval);
       clearTimeout(iframeLoadTimeout);
+      clearTimeout(fallbackTimeout);
       const statusEl = document.getElementById('loadingStatus');
       if (statusEl) {
         statusEl.innerText = "⚠️ Gagal terhubung! Mencoba lagi...";
@@ -209,30 +219,26 @@
       setTimeout(() => {
         if (!loaderHidden) location.reload();
       }, 3000);
-    }
+    };
     
     function hideLoader() {
       if (loaderHidden) return;
       loaderHidden = true;
       clearInterval(textInterval);
       clearTimeout(iframeLoadTimeout);
+      clearTimeout(fallbackTimeout);
       
       const loader = document.getElementById('loader-container');
-      const frame = document.getElementById('srikandi-frame');
+      const frame  = document.getElementById('srikandi-frame');
       
       if (loader) loader.classList.add('hide');
-      if (frame) frame.classList.add('visible');
+      if (frame)  frame.classList.add('visible');
       
       setTimeout(() => {
         if (loader && loader.parentNode) loader.remove();
         window.scrollTo(0, 0);
       }, 500);
     }
-    
-    // Fallback safety (10 detik maksimal loading)
-    setTimeout(() => {
-      if (!loaderHidden) hideLoader();
-    }, 10000);
   })();
 </script>
 </body>
