@@ -1,7 +1,7 @@
 {
   "id": "com.srikandi.monitoring",
   "name": "SRIKANDI",
-  "short_name": "SRIKANDI",
+  "short_name": "SDIM",
   "description": "Aplikasi Monitoring Unit Kendaraan Untuk Security Dealer",
   "start_url": "/?source=pwa",
   "display": "standalone",
