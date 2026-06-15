@@ -136,7 +136,6 @@
     id="srikandi-frame" 
     src="https://script.google.com/macros/s/AKfycbzFAckE_xMlb9iT8D-MIeknriPNHlA6-YbAYCD_EAhXY_3DLmFah5mu7UJaAtaibBoG0w/exec"
     onload="handleIframeLoad()"
-    onerror="handleIframeError()"
     allow="geolocation; microphone; camera; midi; encrypted-media"
     referrerpolicy="no-referrer-when-downgrade">
   </iframe>
@@ -146,19 +145,26 @@
   (function() {
     let loaderHidden = false;
     let textInterval;
-    // ✅ Timeout diselaraskan: fallback (12s) > auto-reload (10s)
-    const IFRAME_TIMEOUT_MS  = 10000; // reload kalau iframe stuck
-    const FALLBACK_HIDE_MS   = 12000; // paksa hide loader (safety net)
+
+    // [HOTFIX v5.8.8] Retry counter — max 3x reload, setelah itu tampil pesan error
+    // Sebelumnya: location.reload() tanpa batas → infinite loop kalau GAS down
+    const MAX_RETRIES = 3;
+    const RETRY_KEY   = 'srikandi_load_retries';
+    const IFRAME_TIMEOUT_MS = 12000; // tunggu 12s sebelum retry
+    const FALLBACK_HIDE_MS  = 14000; // paksa hide loader (safety net, > timeout)
+
+    // Baca & increment retry counter dari sessionStorage
+    let retryCount = parseInt(sessionStorage.getItem(RETRY_KEY) || '0', 10);
 
     const loadingTexts = [
-      "Menghubungi server...", 
-      "Memuat data terbaru...", 
-      "Menyiapkan dashboard...", 
-      "Hampir selesai...", 
-      "Memuat Update Data..."
+      "Menghubungi server...",
+      "Memuat data terbaru...",
+      "Menyiapkan dashboard...",
+      "Hampir selesai...",
+      "Memperbarui data..."
     ];
     let textIndex = 0;
-    
+
     textInterval = setInterval(() => {
       if (!loaderHidden) {
         textIndex = (textIndex + 1) % loadingTexts.length;
@@ -179,63 +185,84 @@
         statusEl.style.color = "#2ecc71";
       }
     }
-    
+
     window.addEventListener('online', () => {
+      sessionStorage.removeItem(RETRY_KEY); // reset counter saat koneksi pulih
       updateOfflineStatus();
       setTimeout(() => location.reload(), 500);
     });
     window.addEventListener('offline', updateOfflineStatus);
     updateOfflineStatus();
 
-    // ✅ Auto-reload kalau iframe stuck (10 detik)
+    // Fungsi tampil pesan error permanen (setelah maks retry)
+    function showFatalError() {
+      clearInterval(textInterval);
+      const statusEl = document.getElementById('loadingStatus');
+      if (statusEl) {
+        statusEl.innerHTML = '⚠️ Gagal memuat aplikasi.<br><span style="font-size:0.75rem;opacity:0.8;">Periksa koneksi, lalu <a href="javascript:void(0)" onclick="sessionStorage.removeItem(\''+RETRY_KEY+'\');location.reload();" style="color:#ffdd57;text-decoration:underline;">coba lagi</a></span>';
+        statusEl.style.color = "#ff6b6b";
+      }
+      // Sembunyikan dots
+      const dots = document.querySelector('.loading-dots');
+      if (dots) dots.style.display = 'none';
+    }
+
+    // Fungsi retry dengan counter
+    function doRetry() {
+      if (loaderHidden) return;
+      retryCount++;
+      if (retryCount >= MAX_RETRIES) {
+        sessionStorage.removeItem(RETRY_KEY);
+        showFatalError();
+        return;
+      }
+      sessionStorage.setItem(RETRY_KEY, retryCount);
+      const statusEl = document.getElementById('loadingStatus');
+      if (statusEl) {
+        statusEl.innerText = `⏳ Mencoba lagi... (${retryCount}/${MAX_RETRIES})`;
+        statusEl.style.color = "#ffaa44";
+      }
+      setTimeout(() => location.reload(), 1500);
+    }
+
+    // Auto-retry kalau iframe stuck — dengan batas MAX_RETRIES
     const iframeLoadTimeout = setTimeout(() => {
       if (!loaderHidden) {
-        console.log('⏳ Iframe terlalu lama, reload halaman...');
-        location.reload();
+        console.log(`⏳ Iframe terlalu lama. Retry ${retryCount + 1}/${MAX_RETRIES}`);
+        doRetry();
       }
     }, IFRAME_TIMEOUT_MS);
 
-    // ✅ Safety net — paksa hide loader setelah 12 detik
+    // Safety net — paksa hide loader setelah 14 detik (lebih dari timeout)
     const fallbackTimeout = setTimeout(() => {
       if (!loaderHidden) hideLoader();
     }, FALLBACK_HIDE_MS);
-    
+
     window.handleIframeLoad = function() {
+      sessionStorage.removeItem(RETRY_KEY); // reset counter kalau berhasil load
       clearTimeout(iframeLoadTimeout);
       clearTimeout(fallbackTimeout);
       setTimeout(() => {
         if (!loaderHidden) hideLoader();
       }, 1200);
     };
-    
-    window.handleIframeError = function() {
-      if (loaderHidden) return;
-      clearInterval(textInterval);
-      clearTimeout(iframeLoadTimeout);
-      clearTimeout(fallbackTimeout);
-      const statusEl = document.getElementById('loadingStatus');
-      if (statusEl) {
-        statusEl.innerText = "⚠️ Gagal terhubung! Mencoba lagi...";
-        statusEl.style.color = "#ff6b6b";
-      }
-      setTimeout(() => {
-        if (!loaderHidden) location.reload();
-      }, 3000);
-    };
-    
+
+    // [HOTFIX v5.8.8] onerror di iframe cross-origin (GAS) tidak reliable — dihapus dari HTML.
+    // Deteksi gagal dilakukan via iframeLoadTimeout di atas.
+
     function hideLoader() {
       if (loaderHidden) return;
       loaderHidden = true;
       clearInterval(textInterval);
       clearTimeout(iframeLoadTimeout);
       clearTimeout(fallbackTimeout);
-      
+
       const loader = document.getElementById('loader-container');
       const frame  = document.getElementById('srikandi-frame');
-      
+
       if (loader) loader.classList.add('hide');
       if (frame)  frame.classList.add('visible');
-      
+
       setTimeout(() => {
         if (loader && loader.parentNode) loader.remove();
         window.scrollTo(0, 0);
